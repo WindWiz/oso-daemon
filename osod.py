@@ -32,23 +32,23 @@ global callback
 def log(str):
 	if (verbose > 0):
 		print str
-		
+
 def dbg(str):
 	if (verbose > 1):
 		print str
 
 def create_database_table(db):
 	query = """CREATE TABLE IF NOT EXISTS osod (
-instance VARCHAR(255), 
+instance VARCHAR(255),
 pollrate int,
-sample_tstamp datetime, 
-create_tstamp datetime, 
-airtemp_avg float, 
-airpressure int, 
-humidity int, 
-windspeed_max float, 
-windspeed_avg float, 
-windspeed_min float, 
+sample_tstamp datetime,
+create_tstamp datetime,
+airtemp_avg float,
+airpressure int,
+humidity int,
+windspeed_max float,
+windspeed_avg float,
+windspeed_min float,
 wind_dir int)"""
 
 	cursor = db.cursor()
@@ -57,17 +57,16 @@ wind_dir int)"""
 	db.commit()
 
 	return success
-	
 		
 def process(str, db, instance, callback, pollrate):
 	dbg("Parsing: '%s'" % str)
 	
 	p = str.split(' ')
 	if (len(p) != 7):
-		log("Invalid packet '%s', unexpected number of tokens '%d'" % 
+		log("Invalid packet '%s', unexpected number of tokens '%d'" %
 			(str, len(p)))
 		return False
-	
+
 	try:
 		create_date = time.time()
 		sample_date = int(p[0])
@@ -76,21 +75,21 @@ def process(str, db, instance, callback, pollrate):
 		humidity = int(p[3])
 		windavg = float(p[4])
 		winddir = int(p[5])
-		windmax = float(p[6])		
+		windmax = float(p[6])
 	except ValueError:
 		log("Invalid packet '%s', illegal field formatting." % str)
 		return False
 
 	cursor = db.cursor()
 
-	query = """INSERT INTO osod (instance, pollrate, sample_tstamp, 
-create_tstamp, airtemp_avg, airpressure, humidity, windspeed_max, 
-windspeed_min, windspeed_avg, wind_dir) 
+	query = """INSERT INTO osod (instance, pollrate, sample_tstamp,
+create_tstamp, airtemp_avg, airpressure, humidity, windspeed_max,
+windspeed_min, windspeed_avg, wind_dir)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 	dbg("Executing query %s" % query)
-	if not cursor.execute(query, (instance, pollrate, sample_date, 
-		create_date, temp, airpressure, humidity, windmax, None, 
+	if not cursor.execute(query, (instance, pollrate, sample_date,
+		create_date, temp, airpressure, humidity, windmax, None,
 		windavg, winddir)):
 		print "Failed to insert: %s" % str
 		return False
@@ -104,18 +103,18 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 	log("- Air pressure: %d kPa" % airpressure)
 	log("- Humidity: %d%%" % humidity)
 	log("- Wind: avg=%.1f max=%.1f dir=%d" % (windavg, windmax, winddir))
-	
-	if callback is not None:		
+
+	if callback is not None:
 		args = [callback]
 		if instance is not None:
 			args.append(instance)
-		try:			
+		try:
 			retcode = subprocess.call(args)
 			if retcode != 0:
 				print "Callback '%s' failed (%d)" % (callback, retcode)
 		except Exception, x:
 			print "Callback '%s' failed: %s" % (callback, x)
-	
+
 	return True
 
 if __name__ == "__main__":
@@ -127,7 +126,7 @@ if __name__ == "__main__":
 	simstr = False
 	pollrate = 60
 	instance = None
-			
+
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'u:vs:c:f:i:n:')
 	except getopt.error, msg:
@@ -144,12 +143,12 @@ if __name__ == "__main__":
 		if o == '-p': pollrate = a
 		if o == '-c':
 			if (not os.path.isfile(a)):
-				print "No such callback file '%s', aborting." % a 
-				sys.exit(1)			
+				print "No such callback file '%s', aborting." % a
+				sys.exit(1)
 			if (not os.access(a, os.X_OK)):
 				print "Specified callback file '%s' is not an executable." % a
 				sys.exit(1)
-			callback = a;
+			callback = a
 
 	log("Using database '%s'" % dbfile)
 	db = sqlite3.connect(dbfile)
@@ -167,7 +166,7 @@ if __name__ == "__main__":
 			sys.exit(1)
 
 		pid = str(os.getpid())
-	
+
 		if os.path.isfile(pidfile):
 			print "%s already exists, exiting." % pidfile
 			sys.exit(1)
@@ -180,7 +179,7 @@ if __name__ == "__main__":
 			sys.exit(1)
 
 	   	file(pidfile, 'w').write(pid)
-		
+
 		try:
 			while True:
 				try:
@@ -189,8 +188,7 @@ if __name__ == "__main__":
 				except urllib2.URLError, x:
 					print "URL error: %s (ignoring)" % x.reason
 				time.sleep(pollrate)
-		except KeyboardInterrupt:	
+		except KeyboardInterrupt:
 			os.unlink(pidfile)
 
 	db.close()
-
