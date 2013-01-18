@@ -62,7 +62,7 @@ def process(str, db, instance, callback, pollrate):
 	dbg("Parsing: '%s'" % str)
 	
 	p = str.split(' ')
-	if (len(p) != 7):
+	if (len(p) != 8):
 		log("Invalid packet '%s', unexpected number of tokens '%d'" %
 			(str, len(p)))
 		return False
@@ -76,6 +76,7 @@ def process(str, db, instance, callback, pollrate):
 		windavg = float(p[4])
 		winddir = int(p[5])
 		windmax = float(p[6])
+		windmin = float(p[7])
 	except ValueError:
 		log("Invalid packet '%s', illegal field formatting." % str)
 		return False
@@ -89,7 +90,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 	dbg("Executing query %s" % query)
 	if not cursor.execute(query, (instance, pollrate, sample_date,
-		create_date, temp, airpressure, humidity, windmax, None,
+		create_date, temp, airpressure, humidity, windmax, windmin,
 		windavg, winddir)):
 		print "Failed to insert: %s" % str
 		return False
@@ -102,7 +103,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 	log("- Air temperature: %.1f degrees celcius" % temp)
 	log("- Air pressure: %d kPa" % airpressure)
 	log("- Humidity: %d%%" % humidity)
-	log("- Wind: avg=%.1f max=%.1f dir=%d" % (windavg, windmax, winddir))
+	log("- Wind: avg=%.1f max=%.1f min=%.1f dir=%d" % (windavg, windmax, windmin, winddir))
 
 	if callback is not None:
 		args = [callback]

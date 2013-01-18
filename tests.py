@@ -53,7 +53,7 @@ FROM osod"""
 		
 	""" Process valid entry """
 	def testValidEntry(self):		
-		input = "1348384242 9.4 1011 86 3.5 349 5.1"
+		input = "1348384242 9.4 1011 86 3.5 349 5.1 1.2"
 		self.assertEqual(self.run_osod(input, self.dbfile), 0)
 		
 		rows = self.get_test_db(self.dbfile)
@@ -61,7 +61,7 @@ FROM osod"""
 		
 	""" Process entry with invalid token count """
 	def testInvalidTokenCount(self):
-		input = "1348384242 9.4 1011 86 3.5 349 5.1 0"
+		input = "1348384242 9.4 1011 86 3.5 349 5.1 1.2 0"
 		self.assertNotEqual(self.run_osod(input, self.dbfile), 0)		
 
 		rows = self.get_test_db(self.dbfile)
@@ -77,7 +77,7 @@ FROM osod"""
 	
 	""" Try inserting something almost valid, but has incorrect field datatypes """
 	def testIncorrectDatatype(self):
-		input = "A B C D E F G"
+		input = "A B C D E F G H"
 		self.assertNotEqual(self.run_osod(input, self.dbfile), 0)		
 
 		rows = self.get_test_db(self.dbfile)
@@ -89,7 +89,7 @@ FROM osod"""
 		self.assertNotEqual(subprocess.call(args), 0)
 		
 	def testCallback(self):				
-		input = "1 2 3 4 5 6 7"
+		input = "1 2 3 4 5 6 7 8"
 				
 		# Basic callback script which writes "hello world" to a random file
 		randomfile = os.path.join(os.getcwd(), str(uuid.uuid4()))
@@ -125,9 +125,8 @@ FROM osod"""
 		os.unlink(randomfile)
 		
 	def testNonexistingCallback(self):
-		input = "1 2 3 4 5 6 7"
-		retcode = self.run_osod(input, self.dbfile, 
-								callback="/This/callback/does/not/exist")
+		input = "1 2 3 4 5 6 7 8"
+		retcode = self.run_osod(input, self.dbfile, callback="/This/callback/does/not/exist")
 
 		self.assertNotEqual(retcode, 0)
 				
