@@ -24,18 +24,10 @@ import subprocess
 import urllib2
 import datetime
 import time
+import logging
 import sqlite3
 
-global verbose
 global callback
-
-def log(str):
-    if (verbose > 0):
-        print str
-
-def dbg(str):
-    if (verbose > 1):
-        print str
 
 def create_database_table(db):
     query = """CREATE TABLE IF NOT EXISTS osod (
@@ -63,12 +55,14 @@ wind_dir int)"""
     return success
 
 def process(str, db, instance, callback, pollrate):
-    dbg("Parsing: '%s'" % str)
+    logger = logging.getLogger('osod')
+
+    logger.debug("Parsing: '%s'" % str)
 
     p = str.split(' ')
     if (len(p) != 8):
-        log("Invalid packet '%s', unexpected number of tokens '%d'" %
-            (str, len(p)))
+        logger.info("Invalid packet '%s', unexpected number of tokens '%d'" %
+                    (str, len(p)))
         return False
 
     try:
@@ -82,7 +76,7 @@ def process(str, db, instance, callback, pollrate):
         windmax = float(p[6])
         windmin = float(p[7])
     except ValueError:
-        log("Invalid packet '%s', illegal field formatting." % str)
+        logger.info("Invalid packet '%s', illegal field formatting." % str)
         return False
 
     cursor = db.cursor()
@@ -92,23 +86,23 @@ create_tstamp, airtemp_avg, airpressure, humidity, windspeed_max,
 windspeed_min, windspeed_avg, wind_dir)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-    dbg("Executing query %s" % query)
+    logger.debug("Executing query %s" % query)
     if not cursor.execute(query, (instance, pollrate, sample_date,
         create_date, temp, airpressure, humidity, windmax, windmin,
         windavg, winddir)):
-        print "Failed to insert: %s" % str
+        print("Failed to insert: %s" % str)
         cursor.close()
         return False
 
     db.commit()
     cursor.close()
 
-    log("Sampled at %s UTC " % datetime.datetime.utcfromtimestamp(sample_date))
-    log("Retrieved at %s UTC " % datetime.datetime.utcfromtimestamp(create_date))
-    log("- Air temperature: %.1f degrees celcius" % temp)
-    log("- Air pressure: %d kPa" % airpressure)
-    log("- Humidity: %d%%" % humidity)
-    log("- Wind: avg=%.1f max=%.1f min=%.1f dir=%d" % (windavg, windmax, windmin, winddir))
+    logger.info("Sampled at %s UTC " % datetime.datetime.utcfromtimestamp(sample_date))
+    logger.info("Retrieved at %s UTC " % datetime.datetime.utcfromtimestamp(create_date))
+    logger.info("- Air temperature: %.1f degrees celcius" % temp)
+    logger.info("- Air pressure: %d kPa" % airpressure)
+    logger.info("- Humidity: %d%%" % humidity)
+    logger.info("- Wind: avg=%.1f max=%.1f min=%.1f dir=%d" % (windavg, windmax, windmin, winddir))
 
     if callback is not None:
         args = [callback]
@@ -117,9 +111,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         try:
             retcode = subprocess.call(args)
             if retcode != 0:
-                print "Callback '%s' failed (%d)" % (callback, retcode)
+                print("Callback '%s' failed (%d)" % (callback, retcode))
         except Exception, x:
-            print "Callback '%s' failed: %s" % (callback, x)
+            print("Callback '%s' failed: %s" % (callback, x))
 
     return True
 
@@ -156,14 +150,21 @@ if __name__ == "__main__":
                 sys.exit(1)
             callback = a
 
-    log("Using database '%s'" % dbfile)
+    logging.basicConfig()
+    logger = logging.getLogger('osod')
+    if verbose > 1:
+        logger.setLevel(logging.DEBUG)
+    elif verbose > 0:
+        logger.setLevel(logging.INFO)
+
+    logger.info("Using database '%s'" % dbfile)
     db = sqlite3.connect(dbfile)
 
     # Create database table unless it already exists
     create_database_table(db)
 
     if (simstr):
-        log("Simulating input: %s" % simstr)
+        logger.info("Simulating input: %s" % simstr)
         if not process(simstr, db, instance, callback, pollrate):
             sys.exit(1)
     else:
