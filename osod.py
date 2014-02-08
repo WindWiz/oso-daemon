@@ -97,6 +97,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 		create_date, temp, airpressure, humidity, windmax, windmin,
 		windavg, winddir)):
 		print "Failed to insert: %s" % str
+		cursor.close()
 		return False
 
 	db.commit()
