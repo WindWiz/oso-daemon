@@ -53,6 +53,10 @@ wind_dir int)"""
 
 	cursor = db.cursor()
 	success = cursor.execute(query)
+	if not success:
+		return False
+
+	success = cursor.execute('PRAGMA journal_mode=WAL')
 	cursor.close()
 	db.commit()
 
