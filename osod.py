@@ -130,7 +130,7 @@ if __name__ == "__main__":
     instance = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'u:vs:c:f:i:n:')
+        opts, args = getopt.getopt(sys.argv[1:], 'u:vs:c:f:i:n:p:')
     except getopt.error, msg:
         print msg
         sys.exit(1)
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         if o == '-s': simstr = a
         if o == '-i': pidfile = a
         if o == '-n': instance = a
-        if o == '-p': pollrate = a
+        if o == '-p': pollrate = int(a)
         if o == '-c':
             if (not os.path.isfile(a)):
                 print "No such callback file '%s', aborting." % a
