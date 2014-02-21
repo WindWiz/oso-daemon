@@ -1,4 +1,6 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+# Copyright (c) 2010-2014 Magnus Olsson (magnus@minimum.se)
+# See LICENSE for details
 """osod - Onsala space observatory daemon
 
 Collects weather samples from the Onsala space observatory and store
